@@ -25,11 +25,12 @@ def clean(text):
                     "Stadiums and locations", "Top assists", "Monthly awards", "Attendances",
                     "Ownership", "Management", "Managerial history", "First-team coaching staff", 
                     "Player of the Year awards", "Under-21s and Academy", 
-                    "Out on loan", "First-team squad", "Players", "Arsenal board", "Kit suppliers and shirt sponsors", "Kit deals"]
-    for strip in stripFromHere:
-        text = re.sub(f"({strip}|{strip})(\\n.*)+", "", text)
-        text = text.strip()
-    return text
+                    "Out on loan", "First-team squad", "Players", "Arsenal board", "Kit suppliers and shirt sponsors", "Kit deals", "Independent websites"]
+
+    searchPattern = "|".join(re.escape(item) for item in stripFromHere)
+    matches = re.search(f"\\n({searchPattern})\\n", text)
+    return text[:matches.start()] if matches else text
+
 
 os.makedirs(processedPath, exist_ok=True)
 
@@ -40,8 +41,7 @@ for wikiPageSlug in wikisources:
     filePath = f"{os.path.join(rawdataPath, re.sub('[^a-zA-Z0-9]', '-', fixedSlug))}.txt"
     
     ## create a processed file path if it doesn't exist
-    processedFilePath = f"{os.path.join(PROJECT_ROOT, 'data/processed/', re.sub('[^a-zA-Z0-9]', '-', fixedSlug))}.txt"
-
+    processedFilePath = f"{os.path.join(processedPath, re.sub('[^a-zA-Z0-9]', '-', fixedSlug))}.txt"
     with open(filePath, "r", encoding='utf-8') as f:
         text = f.read()
         cleanedText = clean(text)

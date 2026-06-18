@@ -8,6 +8,8 @@ import re
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 PROJECT_ROOT = os.path.dirname(SCRIPT_DIR)   # assuming fetch.py lives in src/
 
+
+  
 with open(os.path.join(PROJECT_ROOT, "config.yaml"), "r", encoding='utf-8') as f:
     config = yaml.load(f, Loader=yaml.loader.SafeLoader)
 
@@ -49,5 +51,6 @@ for result in results:
     if "title" in result and "error" not in result:
         print(f"Successfully fetched page: {result['title']}")
 
-    
+
+
 
