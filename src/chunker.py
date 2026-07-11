@@ -12,6 +12,12 @@ tokenizer = model.tokenizer
 tokenCap = model.max_seq_length
 
 wikiClient, rawdataPath, processedPath, wikisources = init()
+def isOverlapWorthKeeping(overlap):
+    return not (len(overlap) == 1 and not overlap.isalnum())
+
+def isEmittable(blocks, joinBy):
+    joinedText = joinBy.join(blocks)
+    return len(joinedText.strip()) > 0
 
 def buildChunks (blocks, sourceTitle, pageTitle, index, category, joinBy = '\n'):
     accumulatedText = joinBy.join(blocks)
@@ -28,7 +34,7 @@ def packer(blocks, chunks, index, fixedSlug, cleanPageTitle, category, splitBy =
     for text in blocks:
         print("text is smaller than token cap continue to packer fit")
         if (len(tokenizer.encode(text)) > tokenCap):
-            if (len(accumulatedBlocks) > 0):
+            if (isEmittable(accumulatedBlocks, splitBy)):
                 chunks.append(buildChunks(accumulatedBlocks, fixedSlug, cleanPageTitle, index, category, splitBy))
                 index = index + 1
 
@@ -39,19 +45,25 @@ def packer(blocks, chunks, index, fixedSlug, cleanPageTitle, category, splitBy =
             if (len(sentences) == 1):
                 wordSplitter = ' '
                 words = sentences[-1].split(wordSplitter)
-                if (len(words) == 1) :
+                if (isEmittable(words, wordSplitter)) :
                     chunks.append(buildChunks(words, fixedSlug, cleanPageTitle, index, category, wordSplitter))
                     index = index + 1
                     continue
 
                 chunks, index = packer(words, chunks, index, fixedSlug, cleanPageTitle, category, wordSplitter)
                 overlap = str(chunks[-1]['text']).split(wordSplitter)[-1]
-                accumulatedBlocks = [overlap]
+                if (isOverlapWorthKeeping(overlap)) :
+                    accumulatedBlocks = [overlap]
+                else:
+                    accumulatedBlocks = []
                 continue
 
             chunks, index = packer(sentences, chunks, index, fixedSlug, cleanPageTitle, category, sentencSplitter)
             overlap = str(chunks[-1]['text']).split(sentencSplitter)[-1]
-            accumulatedBlocks = [overlap]
+            if (isOverlapWorthKeeping(overlap)) :
+                accumulatedBlocks = [overlap]
+            else:
+                accumulatedBlocks = []
             continue
 
         accumulatedTexts = splitBy.join(accumulatedBlocks) + splitBy + text
@@ -60,25 +72,26 @@ def packer(blocks, chunks, index, fixedSlug, cleanPageTitle, category, splitBy =
         if (len(tokens) > tokenCap) :
             #emit chunk
             print("current block does not fit in the accumulator so we emit and reset the accumulator " + str(index))
-            chunks.append(buildChunks(accumulatedBlocks, fixedSlug, cleanPageTitle, index, category, splitBy))
-            index = index + 1
-            #get last paragraph as overlap
-            overlap = str(accumulatedBlocks[-1]).split(splitBy)[-1]
-            #calculate if overlap + overflow text > token cap
-            accumulatedBlocks = []
-            carryForwardBlock = overlap + splitBy + text
-            tokens = tokenizer.encode(carryForwardBlock)
-            if (len(tokens) <= tokenCap) :
-                print("ovrlap and overflow block fits in the token cap")
-                accumulatedBlocks.extend([overlap, text])
-            else:
-                print("ovrlap and overflow block does not fits, dropping overlap")
-                accumulatedBlocks.append(text)
+            overlap = ''
+            if (isEmittable(accumulatedBlocks, splitBy)):
+                chunks.append(buildChunks(accumulatedBlocks, fixedSlug, cleanPageTitle, index, category, splitBy))
+                index = index + 1
+                #get last paragraph as overlap
+                overlap = str(accumulatedBlocks[-1]).split(splitBy)[-1]
+                #calculate if overlap + overflow text > token cap
+
+            accumulatedBlocks = [text]
+            if (isOverlapWorthKeeping(overlap)) :
+                carryForwardBlock = overlap + splitBy + text
+                tokens = tokenizer.encode(carryForwardBlock)
+                if (len(tokens) <= tokenCap) :
+                    print("ovrlap and overflow block fits in the token cap")
+                    accumulatedBlocks = [overlap, text]
         else :
             print("block fits in the accumulator, so we append the block into the accumulator")
             accumulatedBlocks.append(text)
 
-    if (len(accumulatedBlocks) > 0):
+    if (isEmittable(accumulatedBlocks, splitBy)):
         print("emitting the leftover blocks")
         chunks.append(buildChunks(accumulatedBlocks, fixedSlug, cleanPageTitle, index, category, splitBy))
         index = index + 1
