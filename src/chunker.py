@@ -1,15 +1,15 @@
 import json
 import os
-import sys
-from networkx import config
 import re
+
+import torch
 from utils import init
-import tokenizers
-import tokenizers.models
+import numpy
 from sentence_transformers import SentenceTransformer
 model = SentenceTransformer("all-MiniLM-L6-v2")
 tokenizer = model.tokenizer
 tokenCap = model.max_seq_length
+
 
 wikiClient, rawdataPath, processedPath, wikisources = init()
 def isOverlapWorthKeeping(overlap):
@@ -121,16 +121,18 @@ for wikiPageSlug in wikisources:
         chunks, i = packer(output, chunks, i, fixedSlug, cleanPageTitle, category)
 
 #write chunks into the jsonl
+embedChunks = []
 with open(os.path.join(processedPath, 'chunks.jsonl'), "w", encoding="utf-8") as f:
     for chunk in chunks:
         print("************Token length****************")
         print(len(tokenizer.encode(chunk['text'])))
         print(chunk['chunk_id'])
+        embedChunks.append(chunk['text'])
         f.write(json.dumps(chunk, ensure_ascii=False) + "\n")
         #print(f"chunk: {chunks}")
 
-print(max(len(tokenizer.encode(c["text"])) for c in chunks))
-#for chunk in chunks:
+embed = model.encode(embedChunks)
+numpy.save(os.path.join(processedPath, 'embed.npy'), embed)
 
 
 
