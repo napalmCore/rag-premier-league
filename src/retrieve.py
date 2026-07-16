@@ -1,6 +1,8 @@
 import json
 import os
 import sys
+
+from anthropic.types import TextBlock
 from utils import init
 import numpy
 from sentence_transformers import SentenceTransformer
@@ -38,11 +40,23 @@ if (len(topChunks) > 0) :
     message = client.messages.create(
         model="claude-sonnet-5",
         max_tokens=1024,
-        messages=[
-            {
+        system="Answer the user's question using ONLY the provided context. if you cannot answer the question from the given context, report back and do not fabricate an answer",
+        messages=[{
                 "role": "user",
-                "content": "answre this question:" + query + ' From this content below:\n' + context
+                "content":[
+                    {
+                        "type" : "text",
+                        "text": "Here is the retrieved context:\n" + context
+                    }, {
+                        "type": "text",
+                        "text": f"Question: {query}\nAnswer the question accurately based on the context above. If you use a document, cite its source title."
+                    }
+                ]
             }
         ]
     )
-    print(message.content)
+
+    for content in message.content :
+        print(type(content))
+        if (type(content) is TextBlock) :
+            print(content.text)
