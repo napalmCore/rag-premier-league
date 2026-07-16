@@ -24,6 +24,6 @@ pages:
   - title: "Pep Guardiola"
     category: "manager"
 wikiApi:
-  user_agent: "rag-premier-league/1.0 (mejria@gmail.com)"
+  user_agent: "rag-premier-league/1.0 (wikitest@mailinator.com)"
   language: "en"
   
