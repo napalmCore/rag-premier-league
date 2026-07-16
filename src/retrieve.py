@@ -58,5 +58,5 @@ if (len(topChunks) > 0) :
 
     for content in message.content :
         print(type(content))
-        if (type(content) is TextBlock) :
+        if (content.type == "text") :
             print(content.text)
