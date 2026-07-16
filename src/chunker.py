@@ -1,8 +1,6 @@
 import json
 import os
 import re
-
-import torch
 from utils import init
 import numpy
 from sentence_transformers import SentenceTransformer
