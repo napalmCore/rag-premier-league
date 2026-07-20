@@ -33,6 +33,7 @@ with open(os.path.join(processedPath, 'chunks.jsonl'), "r", encoding="utf-8") as
         sys.exit("Error: index out of sync.")
     else:
         for i in topIndexes :
+            print(data[i]['source_title'], data[i]['chunk_id'])
             topChunks.append(data[i])
 
 if (len(topChunks) > 0) :

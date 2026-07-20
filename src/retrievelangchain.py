@@ -14,7 +14,8 @@ from langchain_core.output_parsers import StrOutputParser
 def buildContext(documents):
     context = []
     for document in documents:
-         context.append("Source:" + document.metadata['source_title'] + '\n' + document.page_content)
+        print(document.metadata['source_title'], document.metadata.get('chunk_id'))
+        context.append("Source:" + document.metadata['source_title'] + '\n' + document.page_content)
 
     return '\n\n'.join(context)
 
@@ -31,7 +32,7 @@ with open(os.path.join(processedPath, 'chunks.jsonl'), "r", encoding="utf-8") as
     for chunk in data :
         doc = Document(
             page_content=chunk['text'],
-            metadata={"source_title": chunk['source_title'], "category": chunk['category']}
+            metadata={"source_title": chunk['source_title'], "category": chunk['category'], "chunk_id" : chunk['chunk_id']}
         )
         documents.append(doc)
 
