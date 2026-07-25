@@ -37,32 +37,43 @@ def packer(blocks, chunks, index, fixedSlug, cleanPageTitle, category, splitBy =
                 index = index + 1
 
             accumulatedBlocks = []
-            sentencSplitter = '.'
-            sentences = text.split(sentencSplitter)
-            #check if the text is not further breakable into sentences
-            if (len(sentences) == 1):
-                wordSplitter = ' '
-                words = sentences[-1].split(wordSplitter)
-                if (isEmittable(words, wordSplitter)) :
-                    chunks.append(buildChunks(words, fixedSlug, cleanPageTitle, index, category, wordSplitter))
-                    index = index + 1
+            paragraphs = text.split('\n')
+            paragraphsSplitter = '\n'
+            if (len(paragraphs) == 1):
+                sentencSplitter = '.'
+                sentences = text.split(sentencSplitter)
+                #check if the text is not further breakable into sentences
+                if (len(sentences) == 1):
+                    wordSplitter = ' '
+                    words = sentences[-1].split(wordSplitter)
+                    if (len(words) == 1):
+                        if (isEmittable(words, wordSplitter)) :
+                            chunks.append(buildChunks(words, fixedSlug, cleanPageTitle, index, category, wordSplitter))
+                            index = index + 1
+                            continue
+                    chunks, index = packer(words, chunks, index, fixedSlug, cleanPageTitle, category, wordSplitter)
+                    overlap = str(chunks[-1]['text']).split(wordSplitter)[-1]
+                    if (isOverlapWorthKeeping(overlap)) :
+                        accumulatedBlocks = [overlap]
+                    else:
+                        accumulatedBlocks = []
                     continue
 
-                chunks, index = packer(words, chunks, index, fixedSlug, cleanPageTitle, category, wordSplitter)
-                overlap = str(chunks[-1]['text']).split(wordSplitter)[-1]
+                chunks, index = packer(sentences, chunks, index, fixedSlug, cleanPageTitle, category, sentencSplitter)
+                overlap = str(chunks[-1]['text']).split(sentencSplitter)[-1]
                 if (isOverlapWorthKeeping(overlap)) :
                     accumulatedBlocks = [overlap]
                 else:
                     accumulatedBlocks = []
                 continue
-
-            chunks, index = packer(sentences, chunks, index, fixedSlug, cleanPageTitle, category, sentencSplitter)
-            overlap = str(chunks[-1]['text']).split(sentencSplitter)[-1]
-            if (isOverlapWorthKeeping(overlap)) :
-                accumulatedBlocks = [overlap]
-            else:
-                accumulatedBlocks = []
-            continue
+            else :
+                chunks, index = packer(paragraphs, chunks, index, fixedSlug, cleanPageTitle, category, paragraphsSplitter)
+                overlap = str(chunks[-1]['text']).split(paragraphsSplitter)[-1]
+                if (isOverlapWorthKeeping(overlap)) :
+                    accumulatedBlocks = [overlap]
+                else:
+                    accumulatedBlocks = []
+                continue
 
         accumulatedTexts = splitBy.join(accumulatedBlocks) + splitBy + text
         #check if the blocks fits in the accumuulator
@@ -95,6 +106,16 @@ def packer(blocks, chunks, index, fixedSlug, cleanPageTitle, category, splitBy =
         index = index + 1
 
     return chunks, index
+
+"""
+blockTexts = ["test1","test2","test3","test4","test5","test6"]
+chunks = []
+index = 0
+chunks.append(packer(blockTexts, chunks, index, 'slug', 'cleanPageTitle', 'category', splitBy = '\n'))
+for c in chunks :
+    print(c)
+exit()
+"""
 
 def stripBlocks(text, separator="\n\n"):
     blocks = text.split(separator)
