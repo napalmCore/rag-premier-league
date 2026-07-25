@@ -1,7 +1,6 @@
 import os
 import yaml
 import wikipediaapi
-import re
 
 def init():
     global wikiClient, rawdataPath, processedPath, wikisources
