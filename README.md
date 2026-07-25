@@ -1,6 +1,6 @@
 ### Simple RAG system for a premier league wikipages
 
-## Set up instruction
+## Set up and run instruction
  1. Clone the repo 
  2. in config.yml replace the wikiusergaent with yours : user_agent: "rag-premier-league/1.0 (wikitest@mailinator.com)"
  3. run pip install -r requirements.txt
