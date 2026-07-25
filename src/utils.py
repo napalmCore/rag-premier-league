@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 import yaml
 import wikipediaapi
 
@@ -15,6 +16,8 @@ def init():
         user_agent=config["wikiApi"]["user_agent"], language=config["wikiApi"]["language"])
     
     rawdataPath = os.path.abspath(os.path.join(PROJECT_ROOT, "data/raw/"))
+    Path(rawdataPath).mkdir(parents=True, exist_ok=True)
     processedPath = os.path.abspath(os.path.join(PROJECT_ROOT, "data/processed/"))
+    Path(processedPath).mkdir(parents=True, exist_ok=True)
     wikisources = config["pages"]
     return wikiClient, rawdataPath, processedPath, wikisources
