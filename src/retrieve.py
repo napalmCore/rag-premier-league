@@ -3,7 +3,7 @@ import os
 import sys
 
 from anthropic.types import TextBlock
-from utils import init
+from utils import init, bcolors
 import numpy
 from sentence_transformers import SentenceTransformer
 import anthropic
@@ -19,7 +19,7 @@ def buildContext(chunks):
     return '\n\n'.join(context)
 
 model = SentenceTransformer("all-MiniLM-L6-v2")
-query = "how old was david beckham when he first won a title with manchester united"
+query = sys.argv[1]
 embedQuery = model.encode([query])
 wikiClient, rawdataPath, processedPath, wikisources = init()
 embeded = numpy.load(os.path.join(processedPath, 'embed.npy'))
@@ -33,7 +33,6 @@ with open(os.path.join(processedPath, 'chunks.jsonl'), "r", encoding="utf-8") as
         sys.exit("Error: index out of sync.")
     else:
         for i in topIndexes :
-            print(data[i]['source_title'], data[i]['chunk_id'])
             topChunks.append(data[i])
 
 if (len(topChunks) > 0) :
@@ -58,6 +57,6 @@ if (len(topChunks) > 0) :
     )
 
     for content in message.content :
-        print(type(content))
         if (content.type == "text") :
             print(content.text)
+            print(f"{bcolors.OKGREEN} Answer: {content.text}{bcolors.ENDC}")
